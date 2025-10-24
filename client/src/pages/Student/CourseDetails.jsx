@@ -18,6 +18,8 @@ import {
   Tv,
   Infinity,
 } from "lucide-react";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 const CourseDetails = () => {
   const { id } = useParams();
@@ -42,13 +44,49 @@ const CourseDetails = () => {
   };
 
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find((course) => course._id === id);
-    setCourseData(findCourse || null);
-  };
+    try {
+      const {data} = await axios.get(backendUrl + '/api/course/' + id)
+      if(data.success){
+        setCourseData(data.courseData)
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
+  }
+
+  const enrollCourse = async () => {
+      try {
+        if(!userData){
+          return toast.warn('Login to enroll')
+        }
+        if(isAlreadyEnrolled){
+          return toast.warn('Already enrolled')
+        }
+        const token = await getToken();
+
+        const {data} = await axios.post(backendUrl + '/api/user/purchase', {courseId: courseData._id}, {headers: {Authorization: `Bearer ${token}`}})
+        if(data.success) {
+          const {session_url} = data
+          window.location.replace(session_url)
+        } else {
+          toast.error(data.message)
+        }
+      } catch (error) {
+        toast.error(error.message)
+      }
+  }
 
   useEffect(() => {
     fetchCourseData();
   }, [allCourses, id]);
+
+  useEffect(() => {
+    if(userData && courseData){
+      setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id))
+    }
+  }, [userData, courseData])
 
   if (!courseData) {
     return (
@@ -233,7 +271,7 @@ const CourseDetails = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    {courseData.educator?.name || "Expert Instructor"}
+                    {courseData.educator?.name || "Expert Instructor"}  button
                   </h3>
                   <p className="text-sm text-gray-500 mb-2">
                     Professional Educator
@@ -292,7 +330,7 @@ const CourseDetails = () => {
                   </span>
                 </div>
 
-                <button className="w-full bg-acadevo-teal hover:bg-acadevo-cyan text-white py-3 rounded-lg font-semibold transition">
+                <button onClick={enrollCourse} className="w-full bg-acadevo-teal hover:bg-acadevo-cyan text-white py-3 rounded-lg font-semibold transition">
                   {isAlreadyEnrolled ? "Go to Course" : "Buy Now"}
                 </button>
 
