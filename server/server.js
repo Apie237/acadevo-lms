@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './configs/mongodb.js';
-import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js';
+import { clerkWebhooks, stripeWebhooks } from './controllers/webHooks.js';
 import educatorRouter from './routes/educatorRoute.js';
 import { clerkMiddleware, requireAuth } from '@clerk/express';
 import connectCloudinary from './configs/cloudinary.js';
@@ -11,32 +11,28 @@ import userRouter from './routes/userRoute.js';
 
 dotenv.config();
 
-// Initialize express app
 const app = express();
 
-// Global middleware
 app.use(cors());
 app.use(clerkMiddleware());
 
-
-// Special route for Stripe webhooks - must come BEFORE express.json() middleware
+// ⚠️ WEBHOOKS MUST COME BEFORE express.json()
 app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks);
+app.post('/clerk', express.raw({type: 'application/json'}), clerkWebhooks);
 
-// JSON parsing middleware for all other routes
+// Now parse JSON for other routes
 app.use(express.json());
 
-// Connect to MongoDB
 const startServer = async () => {
   try {
     await connectDB();
     await connectCloudinary();
     
-    // Regular routes
     app.get('/', (req, res) => {
       res.send('Hello World!');
     });
-    app.post('/clerk', clerkWebhooks);
-     app.use('/api/educator', requireAuth(), educatorRouter);
+    
+    app.use('/api/educator', requireAuth(), educatorRouter);
     app.use('/api/course', courseRouter);
     app.use('/api/user', requireAuth(), userRouter);
     
