@@ -20,7 +20,7 @@ app.use(clerkMiddleware());
 
 
 // Special route for Stripe webhooks - must come BEFORE express.json() middleware
-app.post('/stripe', express.raw({type: 'application/json'}), stripeWebhooks);
+app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks);
 
 // JSON parsing middleware for all other routes
 app.use(express.json());
@@ -30,19 +30,19 @@ const startServer = async () => {
   try {
     await connectDB();
     await connectCloudinary();
-    
+
     // Regular routes
     app.get('/', (req, res) => {
       res.send('Hello World!');
     });
     app.post('/clerk', clerkWebhooks);
-     app.use('/api/educator', requireAuth(), educatorRouter);
+    app.use('/api/educator', requireAuth(), educatorRouter);
     app.use('/api/course', courseRouter);
     app.use('/api/user', requireAuth(), userRouter);
-    
+
     const PORT = process.env.PORT || 5000;
-    
-    app.listen(PORT, () => 
+
+    app.listen(PORT, () =>
       console.log(`Server is running on port ${PORT}`)
     );
   } catch (error) {
