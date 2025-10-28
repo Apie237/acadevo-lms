@@ -14,13 +14,17 @@ dotenv.config();
 const app = express();
 
 // ✅ Configure CORS
+import cors from "cors";
+
 app.use(cors({
   origin: [
-    "http://localhost:5173",
-    "https://acadevo-lms.vercel.app"
+    "http://localhost:5173", // local dev
+    "https://acadevo-ob7l4b7wp-apie237s-projects.vercel.app" // frontend in prod
   ],
   credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 
 // ✅ Clerk middleware (for protected routes)
 app.use(clerkMiddleware());
