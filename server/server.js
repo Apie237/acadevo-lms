@@ -18,14 +18,17 @@ const app = express();
 app.use(cors());
 app.use(clerkMiddleware());
 
-
-// Special route for Stripe webhooks - must come BEFORE express.json() middleware
+// ⚠️ CRITICAL: Webhook routes MUST come BEFORE express.json() middleware
+// Stripe webhook needs raw body
 app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks);
+
+// Clerk webhook needs JSON body
+app.post('/clerk', express.json(), clerkWebhooks);
 
 // JSON parsing middleware for all other routes
 app.use(express.json());
 
-// Connect to MongoDB
+// Connect to MongoDB and start server
 const startServer = async () => {
   try {
     await connectDB();
@@ -35,7 +38,7 @@ const startServer = async () => {
     app.get('/', (req, res) => {
       res.send('Hello World!');
     });
-    app.post('/clerk', clerkWebhooks);
+
     app.use('/api/educator', requireAuth(), educatorRouter);
     app.use('/api/course', courseRouter);
     app.use('/api/user', requireAuth(), userRouter);
@@ -43,11 +46,14 @@ const startServer = async () => {
     const PORT = process.env.PORT || 5000;
 
     app.listen(PORT, () =>
-      console.log(`Server is running on port ${PORT}`)
+      console.log(`✅ Server is running on port ${PORT}`)
     );
   } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error('❌ Failed to start server:', error);
   }
 };
 
 startServer();
+
+// Export for Vercel serverless
+export default app;
