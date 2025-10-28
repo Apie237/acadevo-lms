@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import connectDB from './configs/mongodb.js';
-import { clerkWebhooks, stripeWebhooks } from './controllers/webHooks.js';
+import { clerkWebhooks, stripeWebhooks } from './controllers/webhooks.js';
 import educatorRouter from './routes/educatorRoute.js';
 import { clerkMiddleware, requireAuth } from '@clerk/express';
 import connectCloudinary from './configs/cloudinary.js';
