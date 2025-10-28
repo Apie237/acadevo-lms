@@ -13,9 +13,6 @@ dotenv.config();
 
 const app = express();
 
-// ✅ Configure CORS
-import cors from "cors";
-
 app.use(cors({
   origin: [
     "http://localhost:5173", // local dev
