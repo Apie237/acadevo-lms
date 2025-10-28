@@ -11,43 +11,43 @@ import userRouter from './routes/userRoute.js';
 
 dotenv.config();
 
-// Initialize express app
 const app = express();
 
-// Global middleware
-app.use(cors());
+// ✅ Configure CORS
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://acadevo-lms.vercel.app"
+  ],
+  credentials: true,
+}));
+
+// ✅ Clerk middleware (for protected routes)
 app.use(clerkMiddleware());
 
-// ⚠️ CRITICAL: Webhook routes MUST come BEFORE express.json() middleware
-// Stripe webhook needs raw body
+// ⚠️ Webhook routes BEFORE express.json()
 app.post('/stripe', express.raw({ type: 'application/json' }), stripeWebhooks);
 
-// Clerk webhook needs JSON body
+// ✅ Clerk webhook needs JSON body
 app.post('/clerk', express.json(), clerkWebhooks);
 
-// JSON parsing middleware for all other routes
+// ✅ Then regular JSON middleware
 app.use(express.json());
 
-// Connect to MongoDB and start server
+// ✅ Connect DB + start server
 const startServer = async () => {
   try {
     await connectDB();
     await connectCloudinary();
 
-    // Regular routes
-    app.get('/', (req, res) => {
-      res.send('Hello World!');
-    });
+    app.get('/', (req, res) => res.send('Hello World!'));
 
     app.use('/api/educator', requireAuth(), educatorRouter);
     app.use('/api/course', courseRouter);
     app.use('/api/user', requireAuth(), userRouter);
 
     const PORT = process.env.PORT || 5000;
-
-    app.listen(PORT, () =>
-      console.log(`✅ Server is running on port ${PORT}`)
-    );
+    app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
   } catch (error) {
     console.error('❌ Failed to start server:', error);
   }
@@ -55,5 +55,4 @@ const startServer = async () => {
 
 startServer();
 
-// Export for Vercel serverless
 export default app;
